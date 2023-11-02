@@ -55,10 +55,6 @@ socket.on('connect', () => {
 
 });
 
-socket.on('connect_error', (error) => {
-  console.error('Connection Error:', error);
-});
-
 socket.on('connect_timeout', () => {
   console.error('Connection Timeout');
 });
