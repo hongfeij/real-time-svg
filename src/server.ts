@@ -3,54 +3,52 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import fs from 'fs';
 import path from 'path';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-const DEST_SVG_FOLDER_PATH = process.env.DEST_SVG_FOLDER_PATH!;
-const SERVER_PORT = Number(process.env.SERVER_PORT!);
+const SERVER_PORT = parseInt(process.env.SERVER_PORT || '3494', 10);
+const DEST_SVG_FOLDER_PATH = process.env.DEST_SVG_FOLDER_PATH || '../dest_svg_folder';
+const destSvgFolderPath = path.join(__dirname, DEST_SVG_FOLDER_PATH);
 
 const app = express();
-
 app.get("/", (req, res) => {
-  res.send("Server is running.");
+    res.send("Server is running.");
 });
-
 app.use(express.static('public'));
 
 const httpServer = createServer(app);
-
 const io = new Server(httpServer, {
-  cors: {
-    origin: '*',
-    methods: ["GET", "POST"],
-  },
+    cors: {
+        origin: '*',
+        methods: ["GET", "POST"],
+    },
 });
 
 io.on('connection', (socket) => {
-  console.log('User Connected:', socket.id);
+    console.log('User Connected:', socket.id);
 
-  socket.on('send-svg', async (data) => {
-    console.log('Received SVG:', data.content);
+    socket.on('send-svg', (data, filename) => {
+        console.log('Received SVG:', data);
 
-    const filePath = path.join(__dirname, DEST_SVG_FOLDER_PATH, data.filename);
+        if (!fs.existsSync(destSvgFolderPath)) {
+            fs.mkdirSync(destSvgFolderPath, { recursive: true });
+        }
 
-    try {
-      await fs.promises.writeFile(filePath, data.content, { flag: 'w' }); 
-      console.log(`SVG updated at ${filePath}`);
-    } catch (err) {
-      console.error('Error writing SVG to file:', err);
-    }
-  });
+        const filePath = path.join(destSvgFolderPath, filename);
 
-  socket.on('error', (err) => {
-    console.error('Socket Error:', err);
-  });
+        try {
+            fs.writeFileSync(filePath, data);
+            console.log(`SVG saved to ${filePath}`);
+        } catch (err) {
+            console.error('Error writing SVG to file:', err);
+        }
+    });
+  
+    socket.on('error', (err) => {
+        console.error('Socket Error:', err);
+    });
 });
 
-const PORT = SERVER_PORT;
-httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+httpServer.listen(SERVER_PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${SERVER_PORT}`);
 }).on('error', (err) => {
-  console.error('Server Error:', err);
+    console.error('Server Error:', err);
 });
