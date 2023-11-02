@@ -1,24 +1,28 @@
 import { io } from 'socket.io-client';
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
 
-const socket = io('http://172.30.78.47:3494');
+dotenv.config();
+
+const SERVER_URL = process.env.SERVER_URL!;
+const SRC_SVG_FOLDER_PATH = process.env.SRC_SVG_FOLDER_PATH!;
+
+const socket = io(SERVER_URL);
 
 socket.on('connect', () => {
   console.log('Connected to Server');
 
-  const svgFolderPath = path.join(__dirname, '../svg_folder');
+  const svgFolderPath = path.join(__dirname, SRC_SVG_FOLDER_PATH);
 
-  // Function to send SVG file to the server
   const sendSvgFile = (filename: string) => {
     const filePath = path.join(svgFolderPath, filename);
     const svgContent = fs.readFileSync(filePath, 'utf-8');
-    socket.emit('send-svg', svgContent, (response: any) => {
+    socket.emit('send-svg', { filename, content: svgContent }, (response: any) => {
       console.log('Server responded:', response);
     });
   };
 
-  // Initially send existing SVG files
   fs.readdir(svgFolderPath, (err, files) => {
     if (err) {
       console.error('Error reading the svg_folder directory', err);
@@ -32,9 +36,8 @@ socket.on('connect', () => {
     });
   });
 
-  // Watch for new SVG files
   fs.watch(svgFolderPath, (eventType, filename) => {
-    if (eventType === 'rename' && filename && path.extname(filename) === '.svg') {  // Checking if a new SVG file is added
+    if (eventType === 'rename' && filename && path.extname(filename) === '.svg') {
       sendSvgFile(filename);
     }
   });
