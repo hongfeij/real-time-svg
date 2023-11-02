@@ -16,21 +16,23 @@ The SVG Synchronizer Tool provides real-time synchronization of SVG files betwee
 - `SERVER_PORT`: Port on which the server listens
 
 ### Installation Steps
-1. **Clone the Repository**:
+1. **Clone the Repository**
 
-2. **Install Dependencies**:
+2. **Update .env file**
+
+3. **Install Dependencies**:
     ```sh
     npm install
     ```
 
-3. **Run the Server**:
+4. **Run the Server**:
     ```sh
-    node server.ts
+    node src/server.ts
     ```
 
-4. **Run the Producer** (in a separate terminal window):
+or **Run the Producer** (in a separate terminal window):
     ```sh
-    node producer.ts
+    node src/producer.ts
     ```
 
 ## Usage
